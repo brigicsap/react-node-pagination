@@ -1,6 +1,23 @@
 import React, { Component } from 'react'
-import { Link } from 'react-router-dom'
 import styled from 'styled-components'
+
+import Pagination from '../Pagination/Pagination'
+
+const Grid = styled.div`
+  max-width: 800px;
+  margin: 2rem auto;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(10rem, 1fr));
+  grid-gap: 2rem;
+`
+
+const GridItem = styled.div`
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid lightgrey;
+  padding: 2rem;
+`
 
 class Home extends Component {
   constructor() {
@@ -8,7 +25,8 @@ class Home extends Component {
 
     this.state = {
       pager: {},
-      itemsOnPage: []
+      itemsOnPage: [],
+      currentPage: null
     }
   }
 
@@ -16,63 +34,81 @@ class Home extends Component {
     this.loadPage()
   }
 
-  async loadPage() {
-    const params = this.props.match.params
+  handleClick = async e => {
+    const pageId = e.target.dataset.page
 
-    const page = params || 1
+    if (pageId !== this.state.currentPage) {
+      const response = await fetch(
+        `/api/items?page=${pageId}`,
+        {
+          method: 'GET',
+          headers: {
+            'Accept': 'application/json',
+            'Content-Type': 'application/json',
+          }
+        }
+      )
 
-    if (page === this.state.pager.currentPage) {
-      return
+      const data = await response.json()
+
+      this.setState({
+        pager: data.pager,
+        itemsOnPage: data.itemsOnPage,
+        currentPage: data.pager.currentPage
+      })
     }
+  }
 
-    const apiRequest = await fetch(
-      `/api/items?page=${page}`,{
-      method: 'GET'
-    })
+  loadPage = async () => {
+    const page = this.props.location.search
+    const pageNumber = parseInt(page.split('=')[1]) || 1
 
-    const response = await apiRequest.json()
+    if (pageNumber === this.state.currentPage) return
+
+    const response = await fetch(
+      `/api/items?page=${pageNumber}`,
+      {
+        method: 'GET',
+        headers: {
+          'Accept': 'application/json',
+          'Content-Type': 'application/json',
+        }
+      }
+    )
+
+    const data = await response.json()
+
     this.setState({
-      pager: response.pager,
-      itemsOnPage: response.itemsOnPage
+      pager: data.pager,
+      itemsOnPage: data.itemsOnPage,
+      currentPage: data.pager.currentPage
     })
   }
 
   render() {
-    const { pager, itemsOnPage } = this.state
-    console.log(pager.currentPage)
+    const { pager: {pages, totalPages}, itemsOnPage, currentPage } = this.state
 
     return (
       <article>
         <section>
-          <h1>React / Node pagination</h1>
-          <ul>
-            { itemsOnPage && itemsOnPage.map(item => <li key={item.id}>{item.name}</li>)}
-          </ul>
+          <h1 style={{
+            textAlign: 'center'
+          }}>
+            React / Node pagination
+          </h1>
+          <Grid>
+            { itemsOnPage && itemsOnPage.map(item => (
+                <GridItem key={item.id}>{item.name}</GridItem>
+              ))
+            }
+          </Grid>
         </section>
-        <aside>
-            <ul>
-              <li>
-                <Link to={{search: `?page=1`}}>First</Link>
-              </li>
-              <li>
-                <Link to={{search: `?page=${pager.currentPage-1}`}}>Previous</Link>
-              </li>
-              { pager.pages && pager.pages.map(page => (
-                  <li key={`page-${page}`}>
-                    <Link to={{ search: `?page/${page}`}}>
-                      {page}
-                    </Link>
-                  </li>
-                ))
-              }
-              <li>
-                <Link to={{search: `?page=${pager.currentPage+1}`}}>Next</Link>
-              </li>
-              <li>
-                <Link to={{search: `?page=${pager.totalPages}`}}>Last</Link>
-              </li>
-            </ul>
-        </aside>
+        <Pagination
+          pages={pages}
+          currentPage={currentPage}
+          totalPages={totalPages}
+          handleClick={this.handleClick}
+        />
       </article>
     )
   }

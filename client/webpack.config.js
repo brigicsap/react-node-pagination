@@ -18,7 +18,8 @@ module.exports = {
               "@babel/preset-env"
             ],
             "plugins": [
-              "@babel/plugin-transform-async-to-generator"
+              "@babel/plugin-transform-async-to-generator",
+              "@babel/plugin-proposal-class-properties"
             ]
           }
         }

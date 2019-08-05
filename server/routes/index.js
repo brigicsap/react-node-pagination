@@ -19,7 +19,7 @@ router.get('/api/items', (req, res, next) => {
   //get page from query params or default to 1
   const page = parseInt(req.query.page) || 1
   //number of items to be queried
-  const pageSize = 10
+  const pageSize = 20
   const pager = paginate(items.length, page, pageSize)
   //get items from array
   const itemsOnPage = items.slice(pager.startIndex, pager.endIndex + 1)
