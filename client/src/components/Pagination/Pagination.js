@@ -32,7 +32,6 @@ const ListItem = styled.li`
 `
 
 const Pagination = ({ currentPage, pages, totalPages, handleClick }) => {
-  console.log({currentPage})
   return (
     <Container>
       <List>
